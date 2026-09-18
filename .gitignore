@@ -1,0 +1,75 @@
+# ─── Lo más importante: NUNCA subir el .env con tus claves reales ────────────
+.env
+.env.local
+.env.production
+.env.staging
+
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.whl
+MANIFEST
+
+# ─── Entornos virtuales ───────────────────────────────────────────────────────
+venv/
+env/
+ENV/
+.venv/
+.env/
+virtualenv/
+
+# ─── Tests y cobertura ────────────────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+
+# ─── IDEs ────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+.dockerignore
+
+# ─── Base de datos local (si usas SQLite para desarrollo) ────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── Alembic (no subir versiones auto-generadas con conflictos) ───────────────
+# Las versiones SÍ se suben, solo ignoramos archivos temporales
+alembic/versions/__pycache__/
+
+# ─── Mypy ────────────────────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json

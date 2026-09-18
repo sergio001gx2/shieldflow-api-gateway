@@ -1,0 +1,78 @@
+# ────────────────────────────────────────────────────────────────────────────
+# ShieldFlow — Docker Compose (Local Development)
+# ────────────────────────────────────────────────────────────────────────────
+# Starts the API server and a local Redis instance.
+# PostgreSQL is intentionally excluded — use Supabase Free Tier in production
+# or add a postgres service for full local setup.
+#
+# Usage:
+#   docker-compose up --build       # Build and start
+#   docker-compose up -d            # Detached mode
+#   docker-compose down             # Stop and remove containers
+#   docker-compose logs -f api      # Tail API logs
+
+version: "3.9"
+
+services:
+  # ── Redis (Token Bucket backing store) ─────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: shieldflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 64mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shieldflow-net
+
+  # ── ShieldFlow API ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development   # Use the dev stage for hot-reload
+    container_name: shieldflow-api
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - DEBUG=true
+      - REDIS_URL=redis://redis:6379
+      # Point to Supabase for DB, or use a local postgres service:
+      - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@host.docker.internal:5432/shieldflow}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key-change-in-production}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - RATE_LIMIT_REQUESTS=100
+      - RATE_LIMIT_WINDOW_SECONDS=60
+      - WAF_ENABLED=true
+      - WAF_LOG_BLOCKED=true
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=console
+    volumes:
+      - ./app:/app/app    # Hot reload: mount app source
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - shieldflow-net
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  shieldflow-net:
+    driver: bridge
